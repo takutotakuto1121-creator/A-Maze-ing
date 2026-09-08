@@ -91,7 +91,10 @@ class MazeGeneratorBasic(ABC):
     def maze_show(self) -> None:
         """
         迷路の可視化
-
+distance_x = abc(x - nx)
+        distance_y = abc(y - ny)
+        if distance_x > 1 or distance_y > 1:
+            return False
         標準出力に16進数で迷路を表示させる
         """
         for y in range(self._config.HEIGHT):
@@ -122,6 +125,19 @@ class MazeGeneratorBasic(ABC):
         else:
             raise ValueError("break_wall(): cardinal should be N, E, S or W")
 
+    def is_road(self, pos: tuple[int, int], n_pos: tuple[int, int]) -> bool:
+        distance = (x - nx)**2 + (y - ny)**2
+        if distance != 1:
+            return False
+        if ny < y and self._pos[x][y] >= 8 and self._pos[nx][ny] in (2, 3, 6, 7, 10, 11, 14, 15):
+            return True
+        if nx > x and self._pos[x][y] in (4,5,6,712,13,14,15) and self._pos[nx][ny] % 2 == 1:
+            return True
+        if ny > y and self._pos[x][y] in (2,3,6,7,10,11,14,15) and self._pos[nx][ny] >= 8:
+            return True
+        if nx < x and self._pos[x][y] % 2 == 1 and self._pos[nx][ny] in (4,5,6,712,13,14,15):
+            return True
+
     def change_to_visited(self, position: tuple[int, int]) -> None:
         """
         座標(x, y)のvisitedをTrueに変更
@@ -145,3 +161,27 @@ if __name__ == "__main__":
     maze_gen.break_wall(6, 6, "S")
     maze_gen.break_wall(9, 9, "W")
     maze_gen.maze_show()
+
+
+# 0  0000
+# 1  0001
+# 2  0010
+# 3  0011
+# 4  0100
+# 5  0101
+# 6  0110
+# 7  0111
+# 8  0000
+# 9  1001
+# 10 1010
+# 11 1011
+# 12 1100
+# 13 1101
+# 14 1110
+# 15 1111
+
+
+# N: 9-15
+# E:
+# S: 2,3,6,7,10,11,14,15
+# W: 奇数

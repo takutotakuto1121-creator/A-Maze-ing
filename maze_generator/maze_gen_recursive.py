@@ -1,7 +1,12 @@
 from maze_generator import Config, MazeGeneratorBasic
 import numpy as np
+import sys
 
 class MazeGenerator(MazeGeneratorBasic):
+    def __init__(self):
+        super().__init__()
+        sys.setrecursionlimit(4 * self._config.WIDTH * self._config.HEIGHT)
+
     def maze_gen(self):
         """
         迷路の生成(recursive backtrack)
@@ -14,6 +19,9 @@ class MazeGenerator(MazeGeneratorBasic):
         self._parent: dict[tuple[int, int], tuple[int, int] | None] = {start:None}
         self.change_to_visited(start)
         self.backtrack(start)
+        if self._config.PERFECT == False:
+            self.make_non_complete_maze()
+
 
     def backtrack(self, start: tuple[int, int]) -> None:
         non_visited = self.get_non_visited_cardinal(start)
@@ -96,3 +104,42 @@ if __name__ == "__main__":
     print("= 迷路生成後 =")
     maze.maze_gen()
     maze.maze_show()
+
+
+
+
+# === 42 ===
+# heightは5以上必要
+# widthは7以上必要
+
+# 最小単位
+# ---7---
+# @   @@@ |
+# @     @ |
+# @@@ @@@ 5
+#   @ @   |
+#   @ @@@ |
+
+# 迷路のサイズが
+# 5*(n-1) < height <= 5*n
+# 7*(m-1) < width <= 7*m
+# なら
+# ---7n--
+# @   @@@ |
+# @     @ |
+# @@@ @@@ 5m
+#   @ @   |
+#   @ @@@ |
+# がMaxでこれより小さいいいいくらいのサイズに
+
+# 最小近く-> しょうがなくでかいサイズで
+# もうちょっとでかい時
+# -> height/5, width/5 の小さい方の半分程度のサイズで
+
+# __init__のときに42を生成
+# breakのときに42ならbreakできないように
+
+# === 完全迷路->不完全迷路 ===
+# 壁を壊す？
+# どういう規則で？
+# わけわからん

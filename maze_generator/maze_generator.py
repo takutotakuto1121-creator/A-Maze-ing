@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field, field_validator, model_validator
 import sys
 import numpy as np
-
+import math
 
 class Config(BaseModel):
     """
@@ -55,6 +55,7 @@ class Config(BaseModel):
 class Cell(BaseModel):
     value: int = Field(ge=0, le=15)
     visited: bool = Field(default=False)
+    is_42: bool = Field(default=False)
 
 class MazeGeneratorBasic(ABC):
     def __init__(self) -> None:
@@ -70,6 +71,7 @@ class MazeGeneratorBasic(ABC):
             [Cell(value = 15, visited = False) for _ in range(self._config.HEIGHT)]
             for _ in range(self._config.WIDTH)
         ]
+        self.make_42_pattern()
         self._rng = np.random.default_rng(42)
         self._parent = {}
 
@@ -91,7 +93,7 @@ class MazeGeneratorBasic(ABC):
     def maze_show(self) -> None:
         """
         迷路の可視化
-distance_x = abc(x - nx)
+        distance_x = abc(x - nx)
         distance_y = abc(y - ny)
         if distance_x > 1 or distance_y > 1:
             return False
@@ -126,17 +128,21 @@ distance_x = abc(x - nx)
             raise ValueError("break_wall(): cardinal should be N, E, S or W")
 
     def is_road(self, pos: tuple[int, int], n_pos: tuple[int, int]) -> bool:
-        distance = (x - nx)**2 + (y - ny)**2
+        x, y = pos
+        nx, ny = n_pos
+        distance = (x - nx) ** 2 + (y - ny) ** 2
         if distance != 1:
             return False
-        if ny < y and self._pos[x][y] >= 8 and self._pos[nx][ny] in (2, 3, 6, 7, 10, 11, 14, 15):
+        # ビット定義: N=8, E=4, S=2, W=1
+        if ny < y and (self._pos[x][y].value & 8) == 0 and (self._pos[nx][ny].value & 2) == 0:
             return True
-        if nx > x and self._pos[x][y] in (4,5,6,712,13,14,15) and self._pos[nx][ny] % 2 == 1:
+        if nx > x and (self._pos[x][y].value & 4) == 0 and (self._pos[nx][ny].value & 1) == 0:
             return True
-        if ny > y and self._pos[x][y] in (2,3,6,7,10,11,14,15) and self._pos[nx][ny] >= 8:
+        if ny > y and (self._pos[x][y].value & 2) == 0 and (self._pos[nx][ny].value & 8) == 0:
             return True
-        if nx < x and self._pos[x][y] % 2 == 1 and self._pos[nx][ny] in (4,5,6,712,13,14,15):
+        if nx < x and (self._pos[x][y].value & 1) == 0 and (self._pos[nx][ny].value & 4) == 0:
             return True
+        return False
 
     def change_to_visited(self, position: tuple[int, int]) -> None:
         """
@@ -144,6 +150,77 @@ distance_x = abc(x - nx)
         """
         x, y = position
         self._pos[x][y].visited = True
+
+    def make_42_pattern(self) -> None:
+        if self._config.WIDTH < 9 or self._config.HEIGHT < 7:
+            return
+        if self._config.WIDTH % 2 == 0:
+            self.make_42_pattern_even()
+        if self._config.WIDTH % 2 == 1:
+            self.make_42_pattern_odd()
+
+    def make_42_pattern_even(self) -> None:
+        """
+        """
+        pattern_42 = [
+            [True, False, False, False, False, True, True, True],
+            [True, False, False, False, False, False, False, True],
+            [True, True, True, False, False, True, True, True],
+            [False, False, True, False, False, True, False, False],
+            [False, False, True, False, False, True, True, True]
+        ]
+        width_42 = 8
+        height_42 = 5
+        width_start = (self._config.WIDTH - 8) // 2
+        height_start = (self._config.HEIGHT - 5) // 2
+        for x, nx in enumerate(range(width_start, width_start + width_42)):
+            for y, ny in enumerate(range(height_start, height_start + height_42)):
+                self._pos[nx][ny].visited = pattern_42[y][x]
+                self._pos[nx][ny].is_42 = pattern_42[y][x]
+
+    def make_42_pattern_odd(self) -> None:
+        pattern_42 = [
+            [True, False, False, False, True, True, True],
+            [True, False, False, False, False, False, True],
+            [True, True, True, False, True, True, True],
+            [False, False, True, False, True, False, False],
+            [False, False, True, False, True, True, True]
+        ]
+        width_42 = 7
+        height_42 = 5
+        width_start = (self._config.WIDTH - 7) // 2
+        height_start = (self._config.HEIGHT - 5) // 2
+        for x, nx in enumerate(range(width_start, width_start + width_42)):
+            for y, ny in enumerate(range(height_start, height_start + height_42)):
+                self._pos[nx][ny].visited = pattern_42[y][x]
+                self._pos[nx][ny].is_42 = pattern_42[y][x]
+
+    def make_non_complete_maze(self) -> None:
+        for x in range(self._config.WIDTH):
+            for y in range(self._config.HEIGHT):
+                self.break_dead_end(x, y)
+
+    def break_dead_end(self, x: int, y:int) -> None:
+        count = 0
+        cardinals = []
+        if self._pos[x][y].is_42:
+            return
+        if y > 0 and self._pos[x][y].value & 8 == 8 and self._pos[x][y - 1].is_42 is False:
+            count += 1
+            cardinals.append("N")
+        if x < self._config.WIDTH - 1 and self._pos[x][y].value & 4 == 4 and self._pos[x + 1][y].is_42 is False:
+            count += 1
+            cardinals.append("E")
+        if y < self._config.HEIGHT - 1 and self._pos[x][y].value & 2 == 2 and self._pos[x][y + 1].is_42 is False:
+            count += 1
+            cardinals.append("S")
+        if x > 0 and self._pos[x][y].value & 1 == 1 and self._pos[x - 1][y].is_42 is False:
+            count += 1
+            cardinals.append("W")
+        if count == 3:
+            # if not self.become_big_space(x, y):
+                cardinal = self._rng.choice(cardinals)
+                self.break_wall((x, y), cardinal)
 
     @abstractmethod
     def maze_gen(self):
@@ -185,3 +262,10 @@ if __name__ == "__main__":
 # E:
 # S: 2,3,6,7,10,11,14,15
 # W: 奇数
+
+
+# 完全迷路->不完全迷路
+# 完全迷路->任意の２点間の距離は１通り
+# 不完全迷路->任意の２点間の距離は少なくとも1通り + ４隅とセンターはオープン + (推奨)no_dead_end
+
+# dead_endを見つける→破壊して3*3にならなければ破壊

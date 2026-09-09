@@ -22,7 +22,6 @@ class MazeGenerator(MazeGeneratorBasic):
         if self._config.PERFECT == False:
             self.make_non_complete_maze()
 
-
     def backtrack(self, start: tuple[int, int]) -> None:
         non_visited = self.get_non_visited_cardinal(start)
         x, y = start

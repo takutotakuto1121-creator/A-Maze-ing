@@ -56,6 +56,7 @@ class Cell(BaseModel):
     value: int = Field(ge=0, le=15)
     visited: bool = Field(default=False)
     is_42: bool = Field(default=False)
+    is_min: bool = Field(default=False)
 
 class MazeGeneratorBasic(ABC):
     def __init__(self) -> None:
@@ -217,10 +218,14 @@ class MazeGeneratorBasic(ABC):
         if x > 0 and self._pos[x][y].value & 1 == 1 and self._pos[x - 1][y].is_42 is False:
             count += 1
             cardinals.append("W")
+
         if count == 3:
-            # if not self.become_big_space(x, y):
                 cardinal = self._rng.choice(cardinals)
                 self.break_wall((x, y), cardinal)
+
+    # def space_check():
+    #     #dead_endが橋の場合は3*3になり得るためそのチェック
+    #     return True
 
     @abstractmethod
     def maze_gen(self):

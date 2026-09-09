@@ -21,6 +21,7 @@ class BreadthFirstSearch():
             x, y = queue.popleft()
             if (x, y) == goal:
                 path = self.reconstruct_path(parent, goal)
+                self._path = path
                 path_cardinal = self.make_path_cardinal(path)
                 self.show(path_cardinal)
                 return
@@ -34,7 +35,6 @@ class BreadthFirstSearch():
                     parent[(nx, ny)] = (x, y)
                     queue.append((nx, ny))
         return
-
 
     def get_passible_cardinals(self, x: int, y: int) -> None:
         cardinals = ["N", "E", "S", "W"]
@@ -78,7 +78,7 @@ class BreadthFirstSearch():
             if y_2 < y_1:
                 path_cardinal.append("N")
             if x_2 > x_1:
-                path_cardinal .append("E")
+                path_cardinal.append("E")
             if y_2 > y_1:
                 path_cardinal.append("S")
             if x_2 < x_1:

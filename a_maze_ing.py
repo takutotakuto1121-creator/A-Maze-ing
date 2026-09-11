@@ -22,4 +22,7 @@ def main():
     visualizer.show()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as e:
+        print(f"[Error]{e}")

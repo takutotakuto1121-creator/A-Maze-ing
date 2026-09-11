@@ -112,16 +112,18 @@ class Visualizer():
         choice = input("Choice? (1-4): ")
         if int(choice) == 1:
             self.show()
-        if int(choice) == 2:
+        elif int(choice) == 2:
             self._show_path = not self._show_path
             self.visualize()
             self.show()
-        if int(choice) == 3:
+        elif int(choice) == 3:
             self.change_color()
             self.visualize()
             self.show()
-        if int(choice) == 4:
+        elif int(choice) == 4:
             return
+        else:
+            raise ValueError("Your choice must be from 1 to 4")
 
     def change_color(self) -> None:
         class CustomColor:

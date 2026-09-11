@@ -20,6 +20,7 @@ class Config(BaseModel):
     OUTPUT_FILE: str
     PERFECT: bool = Field(default=False)
     SEED: int = Field(default=42)
+    STRATEGY: str = Field(default="recursive")
 
     @field_validator("ENTRY", "EXIT", mode="before")
     @classmethod
@@ -205,6 +206,7 @@ class MazeGeneratorBasic(ABC):
             keep_dead_end = self.pick_dead_end_to_keep(max_dead_end)
         else:
             keep_dead_end = []
+        self.break_center_and_corners()
         changed = True
         while changed:
             changed = False
@@ -275,6 +277,44 @@ class MazeGeneratorBasic(ABC):
                     ):
                     return True
         return False
+
+    def break_center_and_corners(self) -> None:
+        if self._pos[0][0].value & 4 == 4:
+            self.break_wall((0, 0), "E")
+        if self._pos[0][0].value & 2 == 2:
+            self.break_wall((0, 0), "S")
+        if self._pos[0][self._config.HEIGHT - 1].value & 8 == 8:
+            self.break_wall((0, self._config.HEIGHT - 1), "N")
+        if self._pos[0][self._config.HEIGHT - 1].value & 4 == 4:
+            self.break_wall((0, self._config.HEIGHT - 1), "E")
+        if self._pos[self._config.WIDTH - 1][0].value & 1 == 1:
+            self.break_wall((self._config.WIDTH - 1, 0), "W")
+        if self._pos[self._config.WIDTH - 1][0].value & 2 == 2:
+            self.break_wall((self._config.WIDTH - 1, 0), "S")
+        if self._pos[self._config.WIDTH - 1][self._config.HEIGHT - 1].value & 8 == 8:
+            self.break_wall((self._config.WIDTH - 1, self._config.HEIGHT - 1), "N")
+        if self._pos[self._config.WIDTH - 1][self._config.HEIGHT - 1].value & 1 == 1:
+            self.break_wall((self._config.WIDTH - 1, self._config.HEIGHT - 1), "W")
+
+        x1 = self._config.WIDTH // 2
+        y1 = self._config.HEIGHT // 2
+
+        if 0 <= x1 < self._config.WIDTH and 0 <= y1 < self._config.HEIGHT:
+            if self._config.WIDTH % 2 == 0 and self._config.HEIGHT % 2 == 0:
+                cells = [(x1, y1), (x1, y1 + 1)]
+                for x, y in cells:
+                    if (x + 1, y) in cells and (self._pos[x][y].value & 4):
+                        self.break_wall((x, y), "E")
+                    if (x, y + 1) in cells and (self._pos[x][y].value & 2):
+                        self.break_wall((x, y), "S")
+
+            elif self._config.WIDTH % 2 == 0:
+                if x1 + 1 < self._config.WIDTH and (self._pos[x1][y1].value & 4):
+                    self.break_wall((x1, y1), "E")
+
+            elif self._config.HEIGHT % 2 == 0:
+                if y1 + 1 < self._config.HEIGHT and (self._pos[x1][y1].value & 2):
+                    self.break_wall((x1, y1), "S")
 
     def remake_maze(self) -> None:
         self._config.SEED += 1

@@ -1,6 +1,8 @@
 from enum import Enum
 from maze_generator import Config, Cell
 from maze_gen_recursive import MazeGenerator
+# from maze_gen_prims import MazeGeneratorPrims
+# from maze_gen_kruskals import MazeGeneratorKruskals
 from bfs import BreadthFirstSearch
 import os
 
@@ -30,24 +32,20 @@ class Visualizer():
         self._path = path
         self._show_path = False
 
-
     def visualize(self) -> None:
         self._visual = [
             [self._wall_color.value for _ in range(self._config.HEIGHT * 2 + 1)]
             for _ in range(self._config.WIDTH * 2 + 1)
         ]
-
         for x in range(self._config.WIDTH * 2 + 1):
             for y in range(self._config.HEIGHT * 2 + 1):
                 if x % 2 == 1 and y % 2 == 1:
                     self.make_road(x, y)
-
         for x in range(self._config.WIDTH):
             for y in range(self._config.HEIGHT):
                 self.make_wall(x, y)
         if self._show_path:
             self.make_shortest_path(self._path)
-
         for x in range(self._config.WIDTH):
             for y in range(self._config.HEIGHT):
                 self.make_42_start_goal_min(x, y)

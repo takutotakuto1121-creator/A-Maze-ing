@@ -5,7 +5,7 @@ import sys
 class MazeGenerator(MazeGeneratorBasic):
     def __init__(self):
         super().__init__()
-        sys.setrecursionlimit(4 * self._config.WIDTH * self._config.HEIGHT)
+        sys.setrecursionlimit(10 * self._config.WIDTH * self._config.HEIGHT)
 
     def maze_gen(self):
         """
@@ -21,6 +21,8 @@ class MazeGenerator(MazeGeneratorBasic):
         self.backtrack(start)
         if self._config.PERFECT == False:
             self.make_non_complete_maze()
+            if self.check_big_space():
+                self.remake_maze()
 
     def backtrack(self, start: tuple[int, int]) -> None:
         non_visited = self.get_non_visited_cardinal(start)

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 import sys
 import numpy as np
 import math
+import sys
 
 class Config(BaseModel):
     """
@@ -18,6 +19,7 @@ class Config(BaseModel):
     EXIT: tuple[int, int]
     OUTPUT_FILE: str
     PERFECT: bool = Field(default=False)
+    SEED: int = Field(default=42)
 
     @field_validator("ENTRY", "EXIT", mode="before")
     @classmethod
@@ -73,8 +75,9 @@ class MazeGeneratorBasic(ABC):
             for _ in range(self._config.WIDTH)
         ]
         self.make_42_pattern()
-        self._rng = np.random.default_rng(42)
+        self._rng = np.random.default_rng(self._config.SEED)
         self._parent = {}
+        self._bonus = False
 
     def parse_config(self) -> Config:
         """
@@ -197,35 +200,97 @@ class MazeGeneratorBasic(ABC):
                 self._pos[nx][ny].is_42 = pattern_42[y][x]
 
     def make_non_complete_maze(self) -> None:
-        for x in range(self._config.WIDTH):
-            for y in range(self._config.HEIGHT):
-                self.break_dead_end(x, y)
+        if len(sys.argv) == 4 and sys.argv[2] == "--max-dead-ends":
+            max_dead_end = int(sys.argv[3])
+            keep_dead_end = self.pick_dead_end_to_keep(max_dead_end)
+        else:
+            keep_dead_end = []
+        changed = True
+        while changed:
+            changed = False
+            for x in range(self._config.WIDTH):
+                for y in range(self._config.HEIGHT):
+                    if (x, y) in keep_dead_end:
+                        continue
+                    if self.break_dead_end(x, y):
+                        changed = True
 
-    def break_dead_end(self, x: int, y:int) -> None:
-        count = 0
-        cardinals = []
+    def break_dead_end(self, x: int, y: int) -> bool:
         if self._pos[x][y].is_42:
-            return
-        if y > 0 and self._pos[x][y].value & 8 == 8 and self._pos[x][y - 1].is_42 is False:
-            count += 1
+            return False
+
+        value = self._pos[x][y].value
+        open_count = 4 - bin(value).count("1")
+        if open_count != 1:
+            return False
+
+        cardinals = []
+        if y > 0 and value & 8 == 8 and self._pos[x][y - 1].is_42 is False:
             cardinals.append("N")
-        if x < self._config.WIDTH - 1 and self._pos[x][y].value & 4 == 4 and self._pos[x + 1][y].is_42 is False:
-            count += 1
+        if x < self._config.WIDTH - 1 and value & 4 == 4 and self._pos[x + 1][y].is_42 is False:
             cardinals.append("E")
-        if y < self._config.HEIGHT - 1 and self._pos[x][y].value & 2 == 2 and self._pos[x][y + 1].is_42 is False:
-            count += 1
+        if y < self._config.HEIGHT - 1 and value & 2 == 2 and self._pos[x][y + 1].is_42 is False:
             cardinals.append("S")
-        if x > 0 and self._pos[x][y].value & 1 == 1 and self._pos[x - 1][y].is_42 is False:
-            count += 1
+        if x > 0 and value & 1 == 1 and self._pos[x - 1][y].is_42 is False:
             cardinals.append("W")
 
-        if count == 3:
-                cardinal = self._rng.choice(cardinals)
-                self.break_wall((x, y), cardinal)
+        if not cardinals:
+            return False
 
-    # def space_check():
+        cardinal = self._rng.choice(cardinals)
+        self.break_wall((x, y), cardinal)
+        return True
+
+
+    def pick_dead_end_to_keep(self, max_dead_end: int) -> list[tuple[int, int]] | None:
+        if max_dead_end <= 0:
+            return []
+
+        candidates = []
+        for x in range(self._config.WIDTH):
+            for y in range(self._config.HEIGHT):
+                if self._pos[x][y].is_42:
+                    continue
+                open_count = 4 - bin(self._pos[x][y].value).count("1")
+                if open_count == 1:
+                    candidates.append((x, y))
+        if not candidates:
+            return []
+
+        pick_count = min(len(candidates), max_dead_end)
+
+        index = self._rng.choice(len(candidates), size=pick_count, replace=False)
+        return [candidates[i] for i in index]
+
+    def check_big_space(self) -> bool:
+        for x in range(self._config.WIDTH):
+            for y in range(self._config.HEIGHT):
+                if (
+                    0 < x < self._config.WIDTH - 1 and 0 < y < self._config.HEIGHT - 1 and
+                    self._pos[x][y] == 0 and
+                    self._pos[x + 1][y - 1] & 2 == 0 and self._pos[x + 1][y - 1] & 1 == 0 and
+                    self._pos[x - 1][y - 1] & 4 == 0 and self._pos[x - 1][y - 1] & 2 == 0 and
+                    self._pos[x - 1][y + 1] & 8 == 0 and self._pos[x + 1][y + 1] & 4 == 0 and
+                    self._pos[x + 1][y + 1] & 8 == 0 and self._pos[x + 1][y + 1] & 1 == 0
+                    ):
+                    return True
+        return False
+
+    def remake_maze(self) -> None:
+        self._config.SEED += 1
+        self.maze_gen()
+
+    # def space_check(x: int, y: int, cardinal: list[str]) -> bool:
     #     #dead_endが橋の場合は3*3になり得るためそのチェック
-    #     return True
+    #     if cardinal == "N":
+    #         if (
+    #             self._pos[x][y] & 4 == 0 and
+    #             self._pos[x + 1][y - 1] == 0 and
+    #             self._pos[x + 2][y] & 8 == 0 and self._pos[x + 2][y - 2] & 1 == 0 and
+    #             self._pos[x + 2][y - 2] & 2 == 0 and self._pos[x + 2][y - 2] & 1 == 0 and
+    #             self._pos[x][y - 2] & 4 == 0 and self._pos[x][y - 2] & 2 == 0
+    #         ):
+    #             return
 
     @abstractmethod
     def maze_gen(self):

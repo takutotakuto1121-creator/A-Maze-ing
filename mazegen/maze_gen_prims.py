@@ -4,10 +4,6 @@ from mazegen.maze_generator import Config, MazeGeneratorBasic
 class MazeGeneratorPrims(MazeGeneratorBasic):
     """ランダム化Prim法を使って迷路を生成するクラス。"""
 
-    def __init__(self, config: Config | None = None) -> None:
-        """検証済みの設定を受け取り、迷路生成器を初期化する。"""
-        super().__init__(config)
-
     def maze_gen(self) -> None:
         """
         全域木となる迷路を生成する。

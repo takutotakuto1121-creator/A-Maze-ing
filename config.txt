@@ -5,3 +5,4 @@ EXIT=14,9
 OUTPUT_FILE=maze.txt
 PERFECT=False
 SEED=50
+STRATEGY=kruskals

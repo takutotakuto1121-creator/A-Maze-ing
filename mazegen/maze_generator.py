@@ -269,11 +269,11 @@ class MazeGeneratorBasic(ABC):
             for y in range(self._config.HEIGHT):
                 if (
                     0 < x < self._config.WIDTH - 1 and 0 < y < self._config.HEIGHT - 1 and
-                    self._pos[x][y] == 0 and
-                    self._pos[x + 1][y - 1] & 2 == 0 and self._pos[x + 1][y - 1] & 1 == 0 and
-                    self._pos[x - 1][y - 1] & 4 == 0 and self._pos[x - 1][y - 1] & 2 == 0 and
-                    self._pos[x - 1][y + 1] & 8 == 0 and self._pos[x + 1][y + 1] & 4 == 0 and
-                    self._pos[x + 1][y + 1] & 8 == 0 and self._pos[x + 1][y + 1] & 1 == 0
+                    not self._pos[x][y].is_42 and
+                    self._pos[x + 1][y - 1].value & 2 == 0 and self._pos[x + 1][y - 1].value & 1 == 0 and
+                    self._pos[x - 1][y - 1].value & 4 == 0 and self._pos[x - 1][y - 1].value & 2 == 0 and
+                    self._pos[x - 1][y + 1].value & 8 == 0 and self._pos[x + 1][y + 1].value & 4 == 0 and
+                    self._pos[x + 1][y + 1].value & 8 == 0 and self._pos[x + 1][y + 1].value & 1 == 0
                     ):
                     return True
         return False
@@ -332,12 +332,24 @@ class MazeGeneratorBasic(ABC):
     #         ):
     #             return
 
-    def output_to_file(self) -> None:
+    # maze_generator.py 内
+    def output_to_file(self, path_cardinal: str = "") -> None:
+        # 自分の規約(N=8,E=4,S=2,W=1)を仕様の規約(N=1,E=2,S=4,W=8)に変換するテーブル
+        # (4bitのビット順を丸ごと反転するだけで変換できる)
+        REVERSE_NIBBLE = [0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15]
+
         with open(self._config.OUTPUT_FILE, "w") as f:
             for y in range(self._config.HEIGHT):
                 for x in range(self._config.WIDTH):
-                    f.write(f"{self._pos[x][y].value:x}")
+                    spec_value = REVERSE_NIBBLE[self._pos[x][y].value]
+                    f.write(f"{spec_value:x}")
                 f.write("\n")
+            f.write("\n")
+            entry_x, entry_y = self._config.ENTRY
+            exit_x, exit_y = self._config.EXIT
+            f.write(f"{entry_x},{entry_y}\n")
+            f.write(f"{exit_x},{exit_y}\n")
+            f.write(f"{path_cardinal}\n")
 
     @abstractmethod
     def maze_gen(self):

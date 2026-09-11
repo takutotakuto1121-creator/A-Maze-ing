@@ -8,6 +8,10 @@ import os
 
 
 class Color(Enum):
+    """
+    カラーを扱いやすくするクラス
+    Enumを継承。列挙型
+    """
     WHITE = "\033[47m  \033[0m"
     BLACK = "\033[40m  \033[0m"
     BLUE = "\033[44m  \033[0m"
@@ -25,6 +29,7 @@ class Color(Enum):
 
 
 class Visualizer():
+    """迷路を可視化"""
     def __init__(self, pos: list[list[Cell]], config: Config, path) -> None:
         self._pos = pos
         self._config = config
@@ -99,6 +104,7 @@ class Visualizer():
             print()
 
     # def show_animation(self):
+
 
 
     def show(self) -> None:

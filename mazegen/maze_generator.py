@@ -292,6 +292,13 @@ class MazeGeneratorBasic(ABC):
     #         ):
     #             return
 
+    def output_to_file(self) -> None:
+        with open(self._config.OUTPUT_FILE, "w") as f:
+            for y in range(self._config.HEIGHT):
+                for x in range(self._config.WIDTH):
+                    f.write(f"{self._pos[x][y].value:x}")
+                f.write("\n")
+
     @abstractmethod
     def maze_gen(self):
         ...

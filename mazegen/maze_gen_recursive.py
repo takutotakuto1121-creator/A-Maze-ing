@@ -1,4 +1,4 @@
-from maze_generator import Config, MazeGeneratorBasic
+from mazegen.maze_generator import Config, MazeGeneratorBasic
 import numpy as np
 import sys
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from maze_generator import Config
-from maze_gen_recursive import MazeGenerator
+from mazegen.maze_generator import Config
+from mazegen.maze_gen_recursive import MazeGenerator
 from collections import deque
 
 class BreadthFirstSearch():

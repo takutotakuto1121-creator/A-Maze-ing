@@ -1,9 +1,9 @@
 from enum import Enum
-from maze_generator import Config, Cell
-from maze_gen_recursive import MazeGenerator
+from mazegen.maze_generator import Config, Cell
+from mazegen.maze_gen_recursive import MazeGenerator
 # from maze_gen_prims import MazeGeneratorPrims
 # from maze_gen_kruskals import MazeGeneratorKruskals
-from bfs import BreadthFirstSearch
+from mazegen.bfs import BreadthFirstSearch
 import os
 
 
@@ -98,6 +98,9 @@ class Visualizer():
                 print(self._visual[x][y], end="")
             print()
 
+    # def show_animation(self):
+
+
     def show(self) -> None:
         os.system('clear')
         self.show_simple()
@@ -121,25 +124,97 @@ class Visualizer():
             return
 
     def change_color(self) -> None:
-        if self._wall_color == Color.WHITE:
+        class CustomColor:
+            def __init__(self, val):
+                self.value = val
+
+        val = self._wall_color.value
+
+        if val == Color.WHITE.value:
             self._wall_color = Color.GREEN
-        elif self._wall_color == Color.GREEN:
+        elif val == Color.GREEN.value:
             self._wall_color = Color.YELLOW
-        elif self._wall_color == Color.YELLOW:
+        elif val == Color.YELLOW.value:
             self._wall_color = Color.MAGENTA
-        elif self._wall_color == Color.MAGENTA:
+        elif val == Color.MAGENTA.value:
             self._wall_color = Color.CYAN
-        elif self._wall_color == Color.CYAN:
+        elif val == Color.CYAN.value:
             self._wall_color = Color.BRIGHT_RED
-        elif self._wall_color == Color.BRIGHT_RED:
+        elif val == Color.BRIGHT_RED.value:
             self._wall_color = Color.BRIGHT_GREEN
-        elif self._wall_color == Color.BRIGHT_GREEN:
+        elif val == Color.BRIGHT_GREEN.value:
             self._wall_color = Color.BRIGHT_YELLOW
-        elif self._wall_color == Color.BRIGHT_YELLOW:
+        elif val == Color.BRIGHT_YELLOW.value:
             self._wall_color = Color.BRIGHT_MAGENTA
-        elif self._wall_color == Color.BRIGHT_MAGENTA:
+        elif val == Color.BRIGHT_MAGENTA.value:
             self._wall_color = Color.BRIGHT_CYAN
-        elif self._wall_color == Color.BRIGHT_CYAN:
+        elif val == Color.BRIGHT_CYAN.value:
+            self._wall_color = CustomColor("\033[48;5;17m  \033[0m")
+        elif val == "\033[48;5;17m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;18m  \033[0m")
+        elif val == "\033[48;5;18m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;19m  \033[0m")
+        elif val == "\033[48;5;19m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;20m  \033[0m")
+        elif val == "\033[48;5;20m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;21m  \033[0m")
+        elif val == "\033[48;5;21m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;22m  \033[0m")
+        elif val == "\033[48;5;22m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;23m  \033[0m")
+        elif val == "\033[48;5;23m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;24m  \033[0m")
+        elif val == "\033[48;5;24m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;25m  \033[0m")
+        elif val == "\033[48;5;25m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;26m  \033[0m")
+        elif val == "\033[48;5;26m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;27m  \033[0m")
+        elif val == "\033[48;5;27m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;28m  \033[0m")
+        elif val == "\033[48;5;28m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;29m  \033[0m")
+        elif val == "\033[48;5;29m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;30m  \033[0m")
+        elif val == "\033[48;5;30m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;31m  \033[0m")
+        elif val == "\033[48;5;31m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;32m  \033[0m")
+        elif val == "\033[48;5;32m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;33m  \033[0m")
+        elif val == "\033[48;5;33m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;34m  \033[0m")
+        elif val == "\033[48;5;34m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;35m  \033[0m")
+        elif val == "\033[48;5;35m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;36m  \033[0m")
+        elif val == "\033[48;5;36m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;37m  \033[0m")
+        elif val == "\033[48;5;37m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;38m  \033[0m")
+        elif val == "\033[48;5;38m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;39m  \033[0m")
+        elif val == "\033[48;5;39m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;40m  \033[0m")
+        elif val == "\033[48;5;40m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;41m  \033[0m")
+        elif val == "\033[48;5;41m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;42m  \033[0m")
+        elif val == "\033[48;5;42m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;43m  \033[0m")
+        elif val == "\033[48;5;43m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;44m  \033[0m")
+        elif val == "\033[48;5;44m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;45m  \033[0m")
+        elif val == "\033[48;5;45m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;46m  \033[0m")
+        elif val == "\033[48;5;46m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;47m  \033[0m")
+        elif val == "\033[48;5;47m  \033[0m":
+            self._wall_color = CustomColor("\033[48;5;48m  \033[0m")
+        elif val == "\033[48;5;48m  \033[0m":
+            self._wall_color = Color.WHITE
+        else:
             self._wall_color = Color.WHITE
 
 

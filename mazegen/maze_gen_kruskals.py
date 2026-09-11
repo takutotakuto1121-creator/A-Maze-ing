@@ -1,4 +1,4 @@
-from maze_generator import Config, MazeGeneratorBasic
+from mazegen.maze_generator import Config, MazeGeneratorBasic
 
 
 class DisjointSet:
@@ -63,7 +63,7 @@ class DisjointSet:
         return True
 
 
-class MazeGenerator(MazeGeneratorBasic):
+class MazeGeneratorKruskals(MazeGeneratorBasic):
     """ランダム化Kruskal法を使って迷路を生成するクラス。"""
 
     def __init__(

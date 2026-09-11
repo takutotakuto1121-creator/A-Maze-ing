@@ -1,7 +1,7 @@
-from maze_generator import Config, MazeGeneratorBasic
+from mazegen.maze_generator import Config, MazeGeneratorBasic
 
 
-class MazeGenerator(MazeGeneratorBasic):
+class MazeGeneratorPrims(MazeGeneratorBasic):
     """ランダム化Prim法を使って迷路を生成するクラス。"""
 
     def __init__(self, config: Config | None = None) -> None:

@@ -14,10 +14,13 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 
+FLAKE8 := $(shell if [ -f venv/bin/flake8 ]; then echo venv/bin/flake8; else echo flake8; fi)
+MYPY := $(shell if [ -f venv/bin/mypy ]; then echo venv/bin/mypy; else echo mypy; fi)
+
 lint:
-	flake8 .
-	mypy --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs .
+	$(FLAKE8) .
+	$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs .
 
 lint-strict:
-	flake8 .
-	mypy --strict .
+	$(FLAKE8) .
+	$(MYPY) --strict .

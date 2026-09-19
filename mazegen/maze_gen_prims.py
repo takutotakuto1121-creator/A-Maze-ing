@@ -1,4 +1,6 @@
-from mazegen.maze_generator import Config, MazeGeneratorBasic
+from mazegen.maze_generator import (
+    MazeGeneratorBasic
+)
 
 
 class MazeGeneratorPrims(MazeGeneratorBasic):
@@ -44,7 +46,15 @@ class MazeGeneratorPrims(MazeGeneratorBasic):
             self.make_non_complete_maze()
 
     def _choose_start(self) -> tuple[int, int]:
-        """42パターン以外から、開始セルをランダムに1つ選ぶ。"""
+        """
+        42パターン以外から、開始セルをランダムに1つ選ぶ。
+
+        Returns:
+            tuple[int, int]: 選ばれた開始セルの座標。
+
+        Raises:
+            ValueError: 有効なセルが存在しない場合。
+        """
         candidates = [
             (x, y)
             for x in range(self._config.WIDTH)
@@ -77,6 +87,10 @@ class MazeGeneratorPrims(MazeGeneratorBasic):
         """
         訪問済みセルから未訪問の隣接セルへ伸びる辺を
         frontierへ追加する。
+
+        Args:
+            position (tuple[int, int]): 追加の起点となるセルの座標。
+            frontier (list): 辺を追加する対象のリスト。
         """
         x, y = position
 

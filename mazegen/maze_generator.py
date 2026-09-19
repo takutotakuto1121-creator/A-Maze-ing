@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from abc import ABC, abstractmethod
+from typing import Any
 from pydantic import BaseModel, Field, field_validator, model_validator
 import sys
-import numpy as np
-import math
-import sys
+import random
+
 
 class Config(BaseModel):
     """
@@ -24,11 +24,17 @@ class Config(BaseModel):
 
     @field_validator("ENTRY", "EXIT", mode="before")
     @classmethod
-    def parse_pos(cls, v):
+    def parse_pos(cls: Any, v: Any) -> Any:
         """
-        ENTRY, EXITをタプルに変換
+        ENTRY, EXITをタプルに変換する。
 
-        変換できない形式ならそのまま返す
+        変換できない形式ならそのまま返す。
+
+        Args:
+            v (Any): パースする値。
+
+        Returns:
+            Any: 変換済みのタプル、または元の値。
         """
         if isinstance(v, str):
             x, y = v.split(",")
@@ -36,13 +42,19 @@ class Config(BaseModel):
         return v
 
     @model_validator(mode='after')
-    def check_entry_and_exit(self):
+    def check_entry_and_exit(self) -> "Config":
         """
-        Entry, Exitの妥当性の検証
+        Entry, Exitの妥当性の検証を行う。
 
         以下のいずれかに該当すればエラーを投げる
         ・Entry, Exitが同じ場所にある
         ・Entry, Exitが迷路の範囲外に存在する
+
+        Returns:
+            Config: バリデーションに成功したConfigインスタンス。
+
+        Raises:
+            ValueError: 座標が同じ、または範囲外の場合。
         """
         entry_x, entry_y = self.ENTRY
         exit_x, exit_y = self.EXIT
@@ -51,58 +63,83 @@ class Config(BaseModel):
             raise ValueError("Entry and exit should be different")
         if not (0 <= entry_x < self.WIDTH and 0 <= entry_y < self.HEIGHT):
             raise ValueError("Entry should be inside the maze bounds")
-        if not (0 <= exit_x < self.WIDTH and 0 <= exit_y <self.HEIGHT):
+        if not (0 <= exit_x < self.WIDTH and 0 <= exit_y < self.HEIGHT):
             raise ValueError("Exit should be inside the maze bounds")
         return self
 
+
 class Cell(BaseModel):
+    """
+    迷路の1マス（セル）の状態を管理するクラス。
+
+    Attributes:
+        value (int): 壁の状態を示す16進数値 (0-15)。
+        visited (bool): 迷路生成時に訪問済みかどうか。
+        is_42 (bool): '42'のパターンの一部かどうか。
+        is_min (bool): 最短経路の一部かどうか。
+    """
     value: int = Field(ge=0, le=15)
     visited: bool = Field(default=False)
     is_42: bool = Field(default=False)
     is_min: bool = Field(default=False)
 
+
 class MazeGeneratorBasic(ABC):
+    """
+    迷路生成アルゴリズムのベースとなる抽象クラス。
+    """
+    _config: Config
+    _pos: list[list[Cell]]
+    _parent: dict[tuple[int, int], tuple[int, int] | None]
+    _bonus: bool
+
     def __init__(self) -> None:
         """
-        初期化関数
+        初期化関数。
 
         ・self._configにconfig.txtを格納
         ・self._posに座標データを入れる。15で初期化(全方面に壁が存在)。
-        ・self._rngにrngを代(selfで持っておくことにより再現性が保たれる)
+        ・rondom.seed(self._config.SEED)で初期化。
         """
         self._config = self.parse_config()
         self._pos = [
-            [Cell(value = 15, visited = False) for _ in range(self._config.HEIGHT)]
+            [Cell(value=15, visited=False)
+             for _ in range(self._config.HEIGHT)]
             for _ in range(self._config.WIDTH)
         ]
         self.make_42_pattern()
-        self._rng = np.random.default_rng(self._config.SEED)
         self._parent = {}
         self._bonus = False
 
     def parse_config(self) -> Config:
         """
-        config.txtのパース
+        config.txtのパースを行う。
 
-        config.txtを読み取り、Configにして返す
+        config.txtを読み取り、Configにして返す。
+
+        Returns:
+            Config: パースされた設定オブジェクト。
+
+        Raises:
+            Exception: コマンドライン引数が不足している場合。
         """
         if len(sys.argv) < 2:
             raise Exception("Usage: python a-maze-ing.py config.txt")
         with open(sys.argv[1]) as f:
             content = f.read()
             pairs_str = content.split("\n")
-            pairs_dict = dict(item.split("=", 1) for item in pairs_str if "=" in item)
+            pairs_dict: dict[str, Any] = dict(
+                item.split("=", 1)
+                for item in pairs_str if "=" in item
+            )
             config = Config(**pairs_dict)
         return config
 
     def maze_show(self) -> None:
         """
-        迷路の可視化
-        distance_x = abc(x - nx)
-        distance_y = abc(y - ny)
-        if distance_x > 1 or distance_y > 1:
-            return False
-        標準出力に16進数で迷路を表示させる
+        迷路の可視化を行う。
+
+        標準出力に16進数で迷路の壁状態を表示させる。
         """
         for y in range(self._config.HEIGHT):
             for x in range(self._config.WIDTH):
@@ -111,10 +148,16 @@ class MazeGeneratorBasic(ABC):
 
     def break_wall(self, position: tuple[int, int], cardinal: str) -> None:
         """
-        壁を破壊する
+        壁を破壊する。
 
-        座標,方角を引数に取る
-        方角の壁を破壊する
+        座標,方角を引数に取り、その方角の壁を破壊する。
+
+        Args:
+            position (tuple[int, int]): 対象となるセルの座標。
+            cardinal (str): 破壊する壁の方向 ('N', 'E', 'S', 'W')。
+
+        Raises:
+            ValueError: 無効な方角が指定された場合。
         """
         x, y = position
         if cardinal == "N":
@@ -133,30 +176,50 @@ class MazeGeneratorBasic(ABC):
             raise ValueError("break_wall(): cardinal should be N, E, S or W")
 
     def is_road(self, pos: tuple[int, int], n_pos: tuple[int, int]) -> bool:
+        """
+        隣接する2つのセル間に道が開通しているか判定する。
+
+        Args:
+            pos (tuple[int, int]): 基準となるセルの座標。
+            n_pos (tuple[int, int]): 隣接するセルの座標。
+
+        Returns:
+            bool: 道が開通していればTrue、そうでなければFalse。
+        """
         x, y = pos
         nx, ny = n_pos
         distance = (x - nx) ** 2 + (y - ny) ** 2
         if distance != 1:
             return False
         # ビット定義: N=8, E=4, S=2, W=1
-        if ny < y and (self._pos[x][y].value & 8) == 0 and (self._pos[nx][ny].value & 2) == 0:
+        if (ny < y and (self._pos[x][y].value & 8) == 0 and
+                (self._pos[nx][ny].value & 2) == 0):
             return True
-        if nx > x and (self._pos[x][y].value & 4) == 0 and (self._pos[nx][ny].value & 1) == 0:
+        if (nx > x and (self._pos[x][y].value & 4) == 0 and
+                (self._pos[nx][ny].value & 1) == 0):
             return True
-        if ny > y and (self._pos[x][y].value & 2) == 0 and (self._pos[nx][ny].value & 8) == 0:
+        if (ny > y and (self._pos[x][y].value & 2) == 0 and
+                (self._pos[nx][ny].value & 8) == 0):
             return True
-        if nx < x and (self._pos[x][y].value & 1) == 0 and (self._pos[nx][ny].value & 4) == 0:
+        if (nx < x and (self._pos[x][y].value & 1) == 0 and
+                (self._pos[nx][ny].value & 4) == 0):
             return True
         return False
 
     def change_to_visited(self, position: tuple[int, int]) -> None:
         """
-        座標(x, y)のvisitedをTrueに変更
+        座標(x, y)のvisitedステータスをTrueに変更する。
+
+        Args:
+            position (tuple[int, int]): 訪問済みにするセルの座標。
         """
         x, y = position
         self._pos[x][y].visited = True
 
     def make_42_pattern(self) -> None:
+        """
+        迷路内に '42' のパターンを初期生成する。
+        """
         if self._config.WIDTH < 9 or self._config.HEIGHT < 7:
             return
         if self._config.WIDTH % 2 == 0:
@@ -166,6 +229,7 @@ class MazeGeneratorBasic(ABC):
 
     def make_42_pattern_even(self) -> None:
         """
+        偶数幅の迷路用に '42' のパターンを生成する。
         """
         pattern_42 = [
             [True, False, False, False, False, True, True, True],
@@ -179,11 +243,15 @@ class MazeGeneratorBasic(ABC):
         width_start = (self._config.WIDTH - 8) // 2
         height_start = (self._config.HEIGHT - 5) // 2
         for x, nx in enumerate(range(width_start, width_start + width_42)):
-            for y, ny in enumerate(range(height_start, height_start + height_42)):
+            for y, ny in enumerate(range(height_start,
+                                         height_start + height_42)):
                 self._pos[nx][ny].visited = pattern_42[y][x]
                 self._pos[nx][ny].is_42 = pattern_42[y][x]
 
     def make_42_pattern_odd(self) -> None:
+        """
+        奇数幅の迷路用に '42' のパターンを生成する。
+        """
         pattern_42 = [
             [True, False, False, False, True, True, True],
             [True, False, False, False, False, False, True],
@@ -196,11 +264,15 @@ class MazeGeneratorBasic(ABC):
         width_start = (self._config.WIDTH - 7) // 2
         height_start = (self._config.HEIGHT - 5) // 2
         for x, nx in enumerate(range(width_start, width_start + width_42)):
-            for y, ny in enumerate(range(height_start, height_start + height_42)):
+            for y, ny in enumerate(range(height_start,
+                                         height_start + height_42)):
                 self._pos[nx][ny].visited = pattern_42[y][x]
                 self._pos[nx][ny].is_42 = pattern_42[y][x]
 
     def make_non_complete_maze(self) -> None:
+        """
+        不要な行き止まりを破壊して、不完全な（ループのある）迷路を生成する。
+        """
         if len(sys.argv) == 4 and sys.argv[2] == "--max-dead-ends":
             max_dead_end = int(sys.argv[3])
             keep_dead_end = self.pick_dead_end_to_keep(max_dead_end)
@@ -218,6 +290,16 @@ class MazeGeneratorBasic(ABC):
                         changed = True
 
     def break_dead_end(self, x: int, y: int) -> bool:
+        """
+        行き止まりの壁をランダムな方向へ1つ破壊する。
+
+        Args:
+            x (int): X座標。
+            y (int): Y座標。
+
+        Returns:
+            bool: 壁を破壊した場合はTrue、そうでなければFalse。
+        """
         if self._pos[x][y].is_42:
             return False
 
@@ -227,24 +309,38 @@ class MazeGeneratorBasic(ABC):
             return False
 
         cardinals = []
-        if y > 0 and value & 8 == 8 and self._pos[x][y - 1].is_42 is False:
+        if (y > 0 and value & 8 == 8 and
+                not self._pos[x][y - 1].is_42):
             cardinals.append("N")
-        if x < self._config.WIDTH - 1 and value & 4 == 4 and self._pos[x + 1][y].is_42 is False:
+        if (x < self._config.WIDTH - 1 and value & 4 == 4 and
+                not self._pos[x + 1][y].is_42):
             cardinals.append("E")
-        if y < self._config.HEIGHT - 1 and value & 2 == 2 and self._pos[x][y + 1].is_42 is False:
+        if (y < self._config.HEIGHT - 1 and value & 2 == 2 and
+                not self._pos[x][y + 1].is_42):
             cardinals.append("S")
-        if x > 0 and value & 1 == 1 and self._pos[x - 1][y].is_42 is False:
+        if (x > 0 and value & 1 == 1 and
+                not self._pos[x - 1][y].is_42):
             cardinals.append("W")
 
         if not cardinals:
             return False
 
-        cardinal = self._rng.choice(cardinals)
-        self.break_wall((x, y), cardinal)
+        cardinal = random.choice(cardinals)
+        self.break_wall((x, y), str(cardinal))
         return True
 
+    def pick_dead_end_to_keep(
+        self, max_dead_end: int
+    ) -> list[tuple[int, int]]:
+        """
+        残しておく行き止まりのセルをランダムに選択する。
 
-    def pick_dead_end_to_keep(self, max_dead_end: int) -> list[tuple[int, int]] | None:
+        Args:
+            max_dead_end (int): 残す行き止まりの最大数。
+
+        Returns:
+            list[tuple[int, int]]: 残す行き止まりの座標のリスト。
+        """
         if max_dead_end <= 0:
             return []
 
@@ -261,24 +357,38 @@ class MazeGeneratorBasic(ABC):
 
         pick_count = min(len(candidates), max_dead_end)
 
-        index = self._rng.choice(len(candidates), size=pick_count, replace=False)
-        return [candidates[i] for i in index]
+        index = random.sample(range(len(candidates), pick_count))
+        return [candidates[int(i)] for i in index]
 
     def check_big_space(self) -> bool:
+        """
+        迷路内に広すぎる空間(3x3など)が存在するか確認する。
+
+        Returns:
+            bool: 広い空間が存在する場合はTrue、そうでなければFalse。
+        """
         for x in range(self._config.WIDTH):
             for y in range(self._config.HEIGHT):
                 if (
-                    0 < x < self._config.WIDTH - 1 and 0 < y < self._config.HEIGHT - 1 and
-                    not self._pos[x][y].is_42 and
-                    self._pos[x + 1][y - 1].value & 2 == 0 and self._pos[x + 1][y - 1].value & 1 == 0 and
-                    self._pos[x - 1][y - 1].value & 4 == 0 and self._pos[x - 1][y - 1].value & 2 == 0 and
-                    self._pos[x - 1][y + 1].value & 8 == 0 and self._pos[x + 1][y + 1].value & 4 == 0 and
-                    self._pos[x + 1][y + 1].value & 8 == 0 and self._pos[x + 1][y + 1].value & 1 == 0
-                    ):
+                    0 < x < self._config.WIDTH - 1
+                    and 0 < y < self._config.HEIGHT - 1
+                    and not self._pos[x][y].is_42
+                    and self._pos[x + 1][y - 1].value & 2 == 0
+                    and self._pos[x + 1][y - 1].value & 1 == 0
+                    and self._pos[x - 1][y - 1].value & 4 == 0
+                    and self._pos[x - 1][y - 1].value & 2 == 0
+                    and self._pos[x - 1][y + 1].value & 8 == 0
+                    and self._pos[x + 1][y + 1].value & 4 == 0
+                    and self._pos[x + 1][y + 1].value & 8 == 0
+                    and self._pos[x + 1][y + 1].value & 1 == 0
+                ):
                     return True
         return False
 
     def break_center_and_corners(self) -> None:
+        """
+        パックマン用に迷路の四隅と中心の壁を破壊する。
+        """
         if self._pos[0][0].value & 4 == 4:
             self.break_wall((0, 0), "E")
         if self._pos[0][0].value & 2 == 2:
@@ -291,10 +401,17 @@ class MazeGeneratorBasic(ABC):
             self.break_wall((self._config.WIDTH - 1, 0), "W")
         if self._pos[self._config.WIDTH - 1][0].value & 2 == 2:
             self.break_wall((self._config.WIDTH - 1, 0), "S")
-        if self._pos[self._config.WIDTH - 1][self._config.HEIGHT - 1].value & 8 == 8:
-            self.break_wall((self._config.WIDTH - 1, self._config.HEIGHT - 1), "N")
-        if self._pos[self._config.WIDTH - 1][self._config.HEIGHT - 1].value & 1 == 1:
-            self.break_wall((self._config.WIDTH - 1, self._config.HEIGHT - 1), "W")
+
+        if (self._pos[self._config.WIDTH - 1]
+                [self._config.HEIGHT - 1].value & 8 == 8):
+            self.break_wall(
+                (self._config.WIDTH - 1, self._config.HEIGHT - 1), "N"
+            )
+        if (self._pos[self._config.WIDTH - 1]
+                [self._config.HEIGHT - 1].value & 1 == 1):
+            self.break_wall(
+                (self._config.WIDTH - 1, self._config.HEIGHT - 1), "W"
+            )
 
         x1 = self._config.WIDTH // 2
         y1 = self._config.HEIGHT // 2
@@ -309,34 +426,28 @@ class MazeGeneratorBasic(ABC):
                         self.break_wall((x, y), "S")
 
             elif self._config.WIDTH % 2 == 0:
-                if x1 + 1 < self._config.WIDTH and (self._pos[x1][y1].value & 4):
+                if (x1 + 1 < self._config.WIDTH and
+                        (self._pos[x1][y1].value & 4)):
                     self.break_wall((x1, y1), "E")
 
             elif self._config.HEIGHT % 2 == 0:
-                if y1 + 1 < self._config.HEIGHT and (self._pos[x1][y1].value & 2):
+                if (y1 + 1 < self._config.HEIGHT and
+                        (self._pos[x1][y1].value & 2)):
                     self.break_wall((x1, y1), "S")
 
-    def remake_maze(self) -> None:
-        self._config.SEED += 1
-        self.maze_gen()
-
-    # def space_check(x: int, y: int, cardinal: list[str]) -> bool:
-    #     #dead_endが橋の場合は3*3になり得るためそのチェック
-    #     if cardinal == "N":
-    #         if (
-    #             self._pos[x][y] & 4 == 0 and
-    #             self._pos[x + 1][y - 1] == 0 and
-    #             self._pos[x + 2][y] & 8 == 0 and self._pos[x + 2][y - 2] & 1 == 0 and
-    #             self._pos[x + 2][y - 2] & 2 == 0 and self._pos[x + 2][y - 2] & 1 == 0 and
-    #             self._pos[x][y - 2] & 4 == 0 and self._pos[x][y - 2] & 2 == 0
-    #         ):
-    #             return
-
-    # maze_generator.py 内
     def output_to_file(self, path_cardinal: str = "") -> None:
+        """
+        生成された迷路をファイルに出力する。
+
+        Args:
+            path_cardinal (str): 最短経路を示す方角の文字列。
+        """
         # 自分の規約(N=8,E=4,S=2,W=1)を仕様の規約(N=1,E=2,S=4,W=8)に変換するテーブル
         # (4bitのビット順を丸ごと反転するだけで変換できる)
-        REVERSE_NIBBLE = [0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15]
+        REVERSE_NIBBLE = [
+            0, 8, 4, 12, 2, 10, 6, 14,
+            1, 9, 5, 13, 3, 11, 7, 15
+        ]
 
         with open(self._config.OUTPUT_FILE, "w") as f:
             for y in range(self._config.HEIGHT):
@@ -352,22 +463,24 @@ class MazeGeneratorBasic(ABC):
             f.write(f"{path_cardinal}\n")
 
     @abstractmethod
-    def maze_gen(self):
+    def maze_gen(self) -> None:
+        """
+        迷路生成の抽象メソッド。各アルゴリズムで実装する。
+        """
         ...
 
 
 if __name__ == "__main__":
     # 実行するときはmaze_gen()メソッドをコメントアウト
-    maze_gen = MazeGeneratorBasic()
+    maze_gen_inst = MazeGeneratorBasic()  # type: ignore
     print("= 迷路の初期化 =")
-    maze_gen.maze_show()
+    maze_gen_inst.maze_show()
     print("= break_wall()の検証 =")
-    maze_gen.break_wall(1, 1, "N")
-    maze_gen.break_wall(3, 3, "E")
-    maze_gen.break_wall(6, 6, "S")
-    maze_gen.break_wall(9, 9, "W")
-    maze_gen.maze_show()
-
+    maze_gen_inst.break_wall((1, 1), "N")
+    maze_gen_inst.break_wall((3, 3), "E")
+    maze_gen_inst.break_wall((6, 6), "S")
+    maze_gen_inst.break_wall((9, 9), "W")
+    maze_gen_inst.maze_show()
 
 # 0  0000
 # 1  0001

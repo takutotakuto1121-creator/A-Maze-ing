@@ -1,14 +1,24 @@
-from mazegen.maze_generator import Config, MazeGeneratorBasic
+from mazegen.maze_generator import (
+    MazeGeneratorBasic
+)
 
 
 class DisjointSet:
     """サイクルを効率よく検出するためのUnion-Find構造。"""
 
+    _parent: dict[tuple[int, int], tuple[int, int]]
+    _rank: dict[tuple[int, int], int]
+
     def __init__(
         self,
         nodes: list[tuple[int, int]],
     ) -> None:
-        """すべての迷路セルを、それぞれ独立した集合として初期化する。"""
+        """
+        すべての迷路セルを、それぞれ独立した集合として初期化する。
+
+        Args:
+            nodes (list[tuple[int, int]]): 迷路のセルのリスト。
+        """
         self._parent = {
             node: node
             for node in nodes
@@ -23,7 +33,15 @@ class DisjointSet:
         self,
         node: tuple[int, int],
     ) -> tuple[int, int]:
-        """経路圧縮を行いながら、その集合の代表要素を返す。"""
+        """
+        経路圧縮を行いながら、その集合の代表要素を返す。
+
+        Args:
+            node (tuple[int, int]): 対象のセル座標。
+
+        Returns:
+            tuple[int, int]: 代表となるセルの座標。
+        """
         parent = self._parent[node]
 
         if parent != node:
@@ -40,6 +58,13 @@ class DisjointSet:
         2つの集合を結合する。
 
         すでに同じ集合に属していた場合はFalseを返す。
+
+        Args:
+            first (tuple[int, int]): 1つ目のセル座標。
+            second (tuple[int, int]): 2つ目のセル座標。
+
+        Returns:
+            bool: 結合に成功した場合はTrue、既に同じ集合ならFalse。
         """
         root_a = self.find(first)
         root_b = self.find(second)
@@ -65,6 +90,7 @@ class DisjointSet:
 
 class MazeGeneratorKruskals(MazeGeneratorBasic):
     """ランダム化Kruskal法を使って迷路を生成するクラス。"""
+
     def maze_gen(self) -> None:
         """
         全域木となる迷路を生成する。
@@ -122,7 +148,12 @@ class MazeGeneratorKruskals(MazeGeneratorBasic):
             tuple[int, int],
         ]
     ]:
-        """42以外の隣接セル間の辺を、それぞれ1回だけ作成する。"""
+        """
+        42以外の隣接セル間の辺を、それぞれ1回だけ作成する。
+
+        Returns:
+            list: 作成されたエッジのリスト。
+        """
         edges: list[
             tuple[
                 tuple[int, int],

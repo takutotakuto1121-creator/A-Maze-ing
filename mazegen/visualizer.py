@@ -5,6 +5,7 @@ from mazegen.maze_gen_recursive import MazeGenerator
 # from maze_gen_kruskals import MazeGeneratorKruskals
 from mazegen.bfs import BreadthFirstSearch
 import os
+import time
 
 
 class Color(Enum):
@@ -53,10 +54,12 @@ class Visualizer:
     _path: list[tuple[int, int]]
     _show_path: bool
     _visual: list[list[str]]
+    _history: list[tuple[tuple[int, int], str]]
 
     def __init__(
         self, pos: list[list[Cell]],
-        config: Config, path: list[tuple[int, int]]
+        config: Config, path: list[tuple[int, int]],
+        history: list[tuple[tuple[int, int], str]]
     ) -> None:
         """
         Visualizerクラスを初期化する。
@@ -65,6 +68,8 @@ class Visualizer:
             pos (list[list[Cell]]): 迷路セル情報の2次元リスト。
             config (Config): 迷路設定。
             path (list[tuple[int, int]]): 最短経路の座標リスト。
+            history (list[tuple[tuple[int, int], str]]):
+            迷路生成時、生成していった順番に履歴のリスト
         """
         self._pos = pos
         self._config = config
@@ -72,6 +77,7 @@ class Visualizer:
         self._path = path
         self._show_path = False
         self._visual = []
+        self._history = history
 
     def visualize(self) -> None:
         """
@@ -179,7 +185,69 @@ class Visualizer:
             print()
 
     def show_animation(self) -> None:
-        pass
+        if not self._history:
+            print("No history of breaking wall")
+            input("Press Enter to continue")
+            return
+
+        animation_pos: list[list[Cell]] = [
+            [
+                Cell(
+                    value=15,
+                    visited=False,
+                    is_42=self._pos[x][y].is_42
+                )
+                for y in range(self._config.HEIGHT)
+            ]
+            for x in range(self._config.WIDTH)
+        ]
+
+        original_pos = self._pos
+        original_show_path = self._show_path
+        self._pos = animation_pos
+        self._show_path = False
+
+        total = len(self._history)
+        for step, (position, cardinal) in enumerate(self._history, start=1):
+            self.animate_break_wall(animation_pos, position, cardinal)
+            self.visualize()
+            os.system("clear")
+            self.show_simple()
+            print(f"Generating maze ({step}/{total})")
+            time.sleep(0.03)
+
+        self._pos = original_pos
+        self._show_path = original_show_path
+        self.visualize()
+
+    def animate_break_wall(
+        self, pos: list[list[Cell]],
+        position: tuple[int, int], cardinal: str
+    ) -> None:
+        """
+        アニメーション用の迷路データに対して壁を1つ破壊する。
+ 
+        MazeGeneratorBasic.break_wall()と同じビット演算を
+        アニメーション専用の2次元リストに対して行う。
+ 
+        Args:
+            pos (list[list[Cell]]): アニメーション用のセル2次元リスト。
+            position (tuple[int, int]): 対象となるセルの座標。
+            cardinal (str): 破壊する壁の方向 ('N', 'E', 'S', 'W')。
+        """
+        x, y = position
+        if cardinal == "N":
+            pos[x][y].value -= 8
+            pos[x][y - 1].value -= 2
+        elif cardinal == "E":
+            pos[x][y].value -= 4
+            pos[x + 1][y].value -= 1
+        elif cardinal == "S":
+            pos[x][y].value -= 2
+            pos[x][y + 1].value -= 8
+        elif cardinal == "W":
+            pos[x][y].value -= 1
+            pos[x - 1][y].value -= 4
 
     def show(self) -> None:
         """
@@ -198,7 +266,9 @@ class Visualizer:
             if choice.isdecimal() and int(choice) == 1:
                 maze = MazeGenerator()
                 maze.maze_gen()
-                self.__init__(maze._pos, self._config, self._path)
+                bfs = BreadthFirstSearch(maze._pos, maze._config)
+                bfs.search_maze()
+                self.__init__(maze._pos, self._config, bfs._path, maze._history)
                 self.visualize()
             elif choice.isdecimal() and int(choice) == 2:
                 self._show_path = not self._show_path
@@ -206,6 +276,8 @@ class Visualizer:
             elif choice.isdecimal() and int(choice) == 3:
                 self.change_color()
                 self.visualize()
+            elif choice.isdecimal() and int(choice) == 4:
+                self.show_animation()
             elif choice.isdecimal() and int(choice) == 5:
                 return
             else:

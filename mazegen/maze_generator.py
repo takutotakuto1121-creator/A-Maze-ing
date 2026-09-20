@@ -92,6 +92,7 @@ class MazeGeneratorBasic(ABC):
     _pos: list[list[Cell]]
     _parent: dict[tuple[int, int], tuple[int, int] | None]
     _bonus: bool
+    _history: list[tuple[tuple[int, int], str]]
 
     def __init__(self) -> None:
         """
@@ -110,6 +111,7 @@ class MazeGeneratorBasic(ABC):
         self.make_42_pattern()
         self._parent = {}
         self._bonus = False
+        self._history = []
 
     def parse_config(self) -> Config:
         """
@@ -174,6 +176,7 @@ class MazeGeneratorBasic(ABC):
             self._pos[x - 1][y].value -= 4
         else:
             raise ValueError("break_wall(): cardinal should be N, E, S or W")
+        self._history.append(((position), cardinal))
 
     def is_road(self, pos: tuple[int, int], n_pos: tuple[int, int]) -> bool:
         """

@@ -27,7 +27,8 @@ def main() -> None:
         bfs.search_maze()
         maze.output_to_file(bfs._path_cardinal)
         visualizer = Visualizer(
-            bfs._pos, bfs._config, bfs._path, maze._history, bfs._history_bfs
+            bfs._pos, bfs._config, bfs._path,
+            maze._history, bfs._history_bfs, maze._exist_42
         )
         visualizer.visualize()
         visualizer.show()
@@ -40,7 +41,9 @@ def main() -> None:
         bfs_prims.search_maze()
         maze_prims.output_to_file(bfs_prims._path_cardinal)
         vis_prims = Visualizer(
-            bfs_prims._pos, bfs_prims._config, bfs_prims._path, maze_prims._history, bfs._history_bfs
+            bfs_prims._pos, bfs_prims._config, bfs_prims._path,
+            maze_prims._history, bfs_prims._history_bfs,
+            maze_prims._exist_42
         )
         vis_prims.visualize()
         vis_prims.show()
@@ -53,7 +56,9 @@ def main() -> None:
         bfs_kruskals.search_maze()
         maze_kruskals.output_to_file(bfs_kruskals._path_cardinal)
         vis_kruskals = Visualizer(
-            bfs_kruskals._pos, bfs_kruskals._config, bfs_kruskals._path, maze_kruskals._history, bfs._history_bfs
+            bfs_kruskals._pos, bfs_kruskals._config, bfs_kruskals._path,
+            maze_kruskals._history, bfs_kruskals._history_bfs,
+            maze_kruskals._exist_42
         )
         vis_kruskals.visualize()
         vis_kruskals.show()

@@ -1,6 +1,7 @@
 from mazegen.maze_generator import (
     MazeGeneratorBasic
 )
+import random
 
 
 class DisjointSet:
@@ -112,9 +113,8 @@ class MazeGeneratorKruskals(MazeGeneratorBasic):
 
         edges = self._build_edges()
 
-        order = self._rng.permutation(
-            len(edges)
-        )
+        order = list(range(len(edges)))
+        random.shuffle(order)
 
         sets = DisjointSet(cells)
 

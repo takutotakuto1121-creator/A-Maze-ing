@@ -1,7 +1,7 @@
 .PHONY: install run debug clean lint lint-strict
 
 install:
-	pip install -e .
+	pip install -r requirements.txt
 
 run:
 	python3 a_maze_ing.py config.txt
@@ -18,9 +18,9 @@ FLAKE8 := $(shell if [ -f venv/bin/flake8 ]; then echo venv/bin/flake8; else ech
 MYPY := $(shell if [ -f venv/bin/mypy ]; then echo venv/bin/mypy; else echo mypy; fi)
 
 lint:
-	$(FLAKE8) .
-	$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs .
+	$(FLAKE8) mazegen a_maze_ing.py
+	$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs mazegen a_maze_ing.py
 
 lint-strict:
-	$(FLAKE8) .
-	$(MYPY) --strict .
+	$(FLAKE8) mazegen a_maze_ing.py
+	$(MYPY) --strict mazegen a_maze_ing.py

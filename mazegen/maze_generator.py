@@ -93,6 +93,7 @@ class MazeGeneratorBasic(ABC):
     _parent: dict[tuple[int, int], tuple[int, int] | None]
     _bonus: bool
     _history: list[tuple[tuple[int, int], str]]
+    _exist_42: bool
 
     def __init__(self) -> None:
         """
@@ -108,6 +109,7 @@ class MazeGeneratorBasic(ABC):
              for _ in range(self._config.HEIGHT)]
             for _ in range(self._config.WIDTH)
         ]
+        self._exist_42 = False
         self.make_42_pattern()
         self._parent = {}
         self._bonus = False
@@ -130,9 +132,13 @@ class MazeGeneratorBasic(ABC):
         with open(sys.argv[1]) as f:
             content = f.read()
             pairs_str = content.split("\n")
+            pairs = []
+            for item in pairs_str:
+                if not item.startswith("# "):
+                    pairs.append(item)
             pairs_dict: dict[str, Any] = dict(
                 item.split("=", 1)
-                for item in pairs_str if "=" in item
+                for item in pairs if "=" in item
             )
             config = Config(**pairs_dict)
         return config
@@ -227,8 +233,10 @@ class MazeGeneratorBasic(ABC):
             return
         if self._config.WIDTH % 2 == 0:
             self.make_42_pattern_even()
+            self._exist_42 = True
         if self._config.WIDTH % 2 == 1:
             self.make_42_pattern_odd()
+            self._exist_42 = True
 
     def make_42_pattern_even(self) -> None:
         """

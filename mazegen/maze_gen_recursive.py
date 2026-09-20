@@ -1,7 +1,6 @@
 from mazegen.maze_generator import (
     MazeGeneratorBasic
 )
-import sys
 import random
 
 

@@ -1,6 +1,7 @@
 from mazegen.maze_generator import (
     MazeGeneratorBasic
 )
+import random
 
 
 class MazeGeneratorPrims(MazeGeneratorBasic):
@@ -23,9 +24,7 @@ class MazeGeneratorPrims(MazeGeneratorBasic):
         self._add_frontier(start, frontier)
 
         while frontier:
-            index = int(
-                self._rng.integers(0, len(frontier))
-            )
+            index = random.randrange(len(frontier))
 
             frontier[index], frontier[-1] = (
                 frontier[-1],
@@ -67,9 +66,7 @@ class MazeGeneratorPrims(MazeGeneratorBasic):
                 "迷路生成に使用できるセルがありません"
             )
 
-        index = int(
-            self._rng.integers(0, len(candidates))
-        )
+        index = random.randrange(len(candidates))
 
         return candidates[index]
 

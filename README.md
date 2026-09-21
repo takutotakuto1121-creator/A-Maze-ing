@@ -72,18 +72,6 @@ PERFECT=True
 # SEED=42などの整数(何も指定しないと、42になります。)
 # STRATEGY=kruskals, prims, recursiveのいずれか(何も指定しないと、recursionになります。)
 ```
-仮想環境を作成します。  
-```bash
-python3 -m venv venv
-```
-仮想環境をactivateします、
-```bash
-source venv/bin/activate
-```
-パッケージをインストールします
-```bash
-pip install -r requirements.txt
-```
 以下のコマンドで実行します。
 ```bash
 make run

@@ -441,6 +441,12 @@ class MazeGeneratorBasic(ABC):
                         (self._pos[x1][y1].value & 4)):
                     self.break_wall((x1, y1), "E")
 
+            elif self._config.WIDTH % 2 == 1:
+                if self._pos[x1][y1].value & 8 == 8:
+                    self.break_wall((x1, y1), "N")
+                if self._pos[x1][y1].value & 4 == 4:
+                    self.break_wall((x1, y1), "S")
+
             elif self._config.HEIGHT % 2 == 0:
                 if (y1 + 1 < self._config.HEIGHT and
                         (self._pos[x1][y1].value & 2)):
@@ -492,33 +498,3 @@ if __name__ == "__main__":
     maze_gen_inst.break_wall((6, 6), "S")
     maze_gen_inst.break_wall((9, 9), "W")
     maze_gen_inst.maze_show()
-
-# 0  0000
-# 1  0001
-# 2  0010
-# 3  0011
-# 4  0100
-# 5  0101
-# 6  0110
-# 7  0111
-# 8  0000
-# 9  1001
-# 10 1010
-# 11 1011
-# 12 1100
-# 13 1101
-# 14 1110
-# 15 1111
-
-
-# N: 9-15
-# E:
-# S: 2,3,6,7,10,11,14,15
-# W: 奇数
-
-
-# 完全迷路->不完全迷路
-# 完全迷路->任意の２点間の距離は１通り
-# 不完全迷路->任意の２点間の距離は少なくとも1通り + ４隅とセンターはオープン + (推奨)no_dead_end
-
-# dead_endを見つける→破壊して3*3にならなければ破壊

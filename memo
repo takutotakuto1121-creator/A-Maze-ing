@@ -1,0 +1,5 @@
+◦ As entry and exit are specific cells, there must be walls at the external borders.
+<-なんだこれ
+
+DFSも追加するなら
+6にしてDFSを別の色、DFSとかブレバその間の色みたいな設計で

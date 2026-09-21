@@ -1,11 +1,10 @@
 # コメントを記述できます
-WIDTH=31
+WIDTH=25
 HEIGHT=20
 ENTRY=0,0
-EXIT=30, 19
+EXIT=24,19
 OUTPUT_FILE=maze.txt
 PERFECT=False
 # 以下の設定も追加できます
 # SEED=42などの整数(何も指定しないと、42になります。)
-STRATEGY=prims
-
+STRATEGY=kruskals

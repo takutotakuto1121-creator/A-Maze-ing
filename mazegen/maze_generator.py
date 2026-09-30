@@ -95,7 +95,7 @@ class MazeGeneratorBasic(ABC):
     _history: list[tuple[tuple[int, int], str]]
     _exist_42: bool
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         """
         初期化関数。
 
@@ -103,7 +103,13 @@ class MazeGeneratorBasic(ABC):
         ・self._posに座標データを入れる。15で初期化(全方面に壁が存在)。
         ・rondom.seed(self._config.SEED)で初期化。
         """
-        self._config = self.parse_config()
+        self._config = config
+        self.reset()
+
+    def reset(self) -> None:
+        """
+        迷路の初期状態をセットする。
+        """
         self._pos = [
             [Cell(value=15, visited=False)
              for _ in range(self._config.HEIGHT)]
@@ -114,34 +120,6 @@ class MazeGeneratorBasic(ABC):
         self._parent = {}
         self._bonus = False
         self._history = []
-
-    def parse_config(self) -> Config:
-        """
-        config.txtのパースを行う。
-
-        config.txtを読み取り、Configにして返す。
-
-        Returns:
-            Config: パースされた設定オブジェクト。
-
-        Raises:
-            Exception: コマンドライン引数が不足している場合。
-        """
-        if len(sys.argv) < 2:
-            raise Exception("Usage: python a-maze-ing.py config.txt")
-        with open(sys.argv[1]) as f:
-            content = f.read()
-            pairs_str = content.split("\n")
-            pairs = []
-            for item in pairs_str:
-                if not item.startswith("# "):
-                    pairs.append(item)
-            pairs_dict: dict[str, Any] = dict(
-                item.split("=", 1)
-                for item in pairs if "=" in item
-            )
-            config = Config(**pairs_dict)
-        return config
 
     def maze_show(self) -> None:
         """
@@ -368,7 +346,7 @@ class MazeGeneratorBasic(ABC):
 
         pick_count = min(len(candidates), max_dead_end)
 
-        index = random.sample(range(len(candidates), pick_count))
+        index = random.sample(range(len(candidates)), pick_count)
         return [candidates[int(i)] for i in index]
 
     def check_big_space(self) -> bool:
@@ -440,12 +418,6 @@ class MazeGeneratorBasic(ABC):
                 if (x1 + 1 < self._config.WIDTH and
                         (self._pos[x1][y1].value & 4)):
                     self.break_wall((x1, y1), "E")
-
-            elif self._config.WIDTH % 2 == 1:
-                if self._pos[x1][y1].value & 8 == 8:
-                    self.break_wall((x1, y1), "N")
-                if self._pos[x1][y1].value & 4 == 4:
-                    self.break_wall((x1, y1), "S")
 
             elif self._config.HEIGHT % 2 == 0:
                 if (y1 + 1 < self._config.HEIGHT and

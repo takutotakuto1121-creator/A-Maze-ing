@@ -1,11 +1,42 @@
 #!/usr/bin/env python3
 import sys
 import random
-from mazegen.maze_gen_recursive import MazeGenerator
+from typing import Any
+from mazegen.maze_generator import Config
+from mazegen import MazeGenerator
 from mazegen.maze_gen_prims import MazeGeneratorPrims
 from mazegen.maze_gen_kruskals import MazeGeneratorKruskals
 from mazegen.bfs import BreadthFirstSearch
 from mazegen.visualizer import Visualizer
+
+
+def parse_config() -> Config:
+    """
+    config.txtのパースを行う。
+
+    config.txtを読み取り、Configにして返す。
+
+    Returns:
+        Config: パースされた設定オブジェクト。
+
+    Raises:
+        Exception: コマンドライン引数が不足している場合。
+    """
+    if len(sys.argv) < 2:
+        raise Exception("Usage: python a-maze-ing.py config.txt")
+    with open(sys.argv[1]) as f:
+        content = f.read()
+        pairs_str = content.split("\n")
+        pairs = []
+        for item in pairs_str:
+            if not item.startswith("# "):
+                pairs.append(item)
+        pairs_dict: dict[str, Any] = dict(
+            item.split("=", 1)
+            for item in pairs if "=" in item
+        )
+        config = Config(**pairs_dict)
+    return config
 
 
 def main() -> None:
@@ -18,7 +49,8 @@ def main() -> None:
         print("Usage: python3 a_maze_ing.py config.txt")
         sys.exit(1)
 
-    maze = MazeGenerator()
+    config = parse_config()
+    maze = MazeGenerator(config)
     random.seed(maze._config.SEED)
 
     if maze._config.STRATEGY == "recursive":
@@ -33,7 +65,7 @@ def main() -> None:
         visualizer.visualize()
         visualizer.show()
     elif maze._config.STRATEGY == "prims":
-        maze_prims = MazeGeneratorPrims()
+        maze_prims = MazeGeneratorPrims(config)
         maze_prims.maze_gen()
         bfs_prims = BreadthFirstSearch(
             maze_prims._pos, maze_prims._config
@@ -48,7 +80,7 @@ def main() -> None:
         vis_prims.visualize()
         vis_prims.show()
     elif maze._config.STRATEGY == "kruskals":
-        maze_kruskals = MazeGeneratorKruskals()
+        maze_kruskals = MazeGeneratorKruskals(config)
         maze_kruskals.maze_gen()
         bfs_kruskals = BreadthFirstSearch(
             maze_kruskals._pos, maze_kruskals._config
@@ -65,7 +97,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except BaseException as e:
-        print(f"[Error]{e}")
+    # try:
+    main()
+    # except BaseException as e:
+    #     print(f"[Error]{e}")

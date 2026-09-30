@@ -202,7 +202,11 @@ class BreadthFirstSearch:
 
 
 if __name__ == "__main__":
-    maze = MazeGenerator()
+    config = Config(
+        WIDTH=20, HEIGHT=20, ENTRY=(0, 0), EXIT=(19, 19),
+        OUTPUT_FILE="dummy.txt"
+    )
+    maze = MazeGenerator(config)
     print("= 迷路生成前 =")
     maze.maze_show()
     print("= 迷路生成後（バックトラッキング） =")

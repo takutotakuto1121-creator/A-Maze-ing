@@ -86,11 +86,13 @@ make run
 5を入力し、Enterを押すと、プログラムの実行が中断されます。  
 それ以外のを入力し、Enterを押すと、エラーメッセージが表示され、再度入力待ちをします。  
   
-もしあなたが42Tokyoの学生なら、、、  
-A-Maze-ingのプロジェクトページから、maze_analyzer.pyをインストールし、rootディレクトリに配置
-以下のコマンドでmaze.txtが課題の要件を満たしているか確認できます。
+`make run`の実行後、以下のコマンドでmaze.txtが課題の要件を満たしているか確認できます。
 ```bash
-python3 maze_analyzer.py maze.txt
+make analyze
+```
+ボーナスのno-dead-endの条件も満たしているかは以下のコマンドで確認できます。
+```bash
+maek analyze-bonus
 ```
 
 ## Algorithm
@@ -229,26 +231,35 @@ Structureのクラス構造を参照してください。迷路生成アルゴ�
 #### BFSアニメーション
 最短経路をを求める際のBFSの挙動がよくわかるような実装にしました。ただ単に最短経路を辿るアニメーションをつけるだけではつまらないので。迷路生成アニメーション時と同様に、BFSで最短経路を求める際に訪問したセルの順番をhistory_bfsとして記憶しておきます。ビジュアライズの際に、この順番で訪れたセルの色を変える、迷路を表示する、0.02秒待機する。次に訪れたセルの色を変える、迷路を表示する、0.02秒待機する。を繰り返すと徐々にスタートからゴールに向かって色が変わっていって、ゴールに辿り着いた時に改めて最短経路を表示するという実装にしました。
 
-### パッケージ化について（おまけ）
-mazegenをパッケージ化します。buildをインストールしている状態で、以下のコマンドを実行します。
+### パッケージ化について
+以下のコマンドでパッケージ化の検証ができます。
 ```bash
-python3 -m build
+make review
 ```
-すると、mazegen/dist/mazegen-1.0.0-py3-none-any.whlが作成されます。
-a_maze_ing.py, config.txt, mazegen-1.0.0-py3-any.whlのみを別のディレクトリのrootに配置します。このディレクトリに移動し、以下のコマンドを実行します。
-```bash
-python3 -m venv venv
+
+### モジュールとしての利用方法
+別のプロジェクトでこの迷路ジェネレーターをインポートして使用する例です。
+
+```python
+from mazegen import MazeGenerator
+from mazegen import Config
+
+# カスタムパラメータを渡して設定を作成
+config = Config(
+    WIDTH=20, 
+    HEIGHT=15, 
+    ENTRY=(0,0), 
+    EXIT=(19,14), 
+    OUTPUT_FILE="maze.txt",
+    PERFECT=False
+)
+
+# インスタンス化と生成
+maze = MazeGenerator(config)
+maze.maze_gen()
+maze.show()
 ```
-```bash
-source venv/bin/activate
-```
-```bash
-pip install mazegen-1.0.0-py3-any.whl
-```
-```bash
-python3 a_maze_ing.py config.txt
-```
-すると、Usageでの実行結果と同じ実行結果が得られます。
+
 
 ## Structure
 ### ファイル構造

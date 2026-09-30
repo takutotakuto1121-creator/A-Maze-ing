@@ -16,10 +16,10 @@ class MazeGenerator(MazeGeneratorBasic):
             start_x = random.randrange(0, self._config.WIDTH)
             start_y = random.randrange(0, self._config.HEIGHT)
             start = (int(start_x), int(start_y))
+            self.reset()
             self._parent: dict[
                 tuple[int, int], tuple[int, int] | None
             ] = {start: None}
-            self.__init__()
             self.change_to_visited(start)
             self.backtrack(start)
             if not self._config.PERFECT:
@@ -181,7 +181,12 @@ class MazeGenerator(MazeGeneratorBasic):
 
 
 if __name__ == "__main__":
-    maze = MazeGenerator()
+    from mazegen.maze_generator import Config
+    config = Config(
+        WIDTH=20, HEIGHT=20, ENTRY=(0, 0), EXIT=(19, 19),
+        OUTPUT_FILE="dummy.txt"
+    )
+    maze = MazeGenerator(config)
     print("= 迷路生成前 =")
     maze.maze_show()
     print("= 迷路生成後 =")

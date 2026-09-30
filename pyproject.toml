@@ -6,14 +6,14 @@ build-backend = "setuptools.build_meta"
 name = "mazegen"
 version = "1.0.0"
 authors = [
-  { name="tsugimot", email="tsugimot@sutudent.42tokyo.jp" },
-  { name="aiwane", email="aiwane@student.42tokyo.jp}
+  { name="tsugimot", email="tsugimot@student.42tokyo.jp" },
+  { name="aiwane", email="aiwane@student.42tokyo.jp"}
 ]
 description = "A-Maze-ing maze generator module"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pydantic"
+    "pydantic",
     "build"
 ]
 

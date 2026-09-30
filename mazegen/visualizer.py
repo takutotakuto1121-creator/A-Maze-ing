@@ -1,5 +1,5 @@
 from enum import Enum
-from mazegen.maze_generator import Config, Cell
+from mazegen.maze_generator import Config, Cell, MazeGeneratorBasic
 from mazegen.maze_gen_recursive import MazeGenerator
 from mazegen.maze_gen_prims import MazeGeneratorPrims
 from mazegen.maze_gen_kruskals import MazeGeneratorKruskals
@@ -54,7 +54,7 @@ class Visualizer:
     _path: list[tuple[int, int]]
     _show_path: bool
     _visual: list[list[str]]
-    _history: list[tuple[tuple[int, int], tuple[int, int] | None]]
+    _history: list[tuple[tuple[int, int], str]]
     _history_bfs: list[tuple[tuple[int, int], tuple[int, int] | None]]
     _exist_42: bool
 
@@ -62,7 +62,7 @@ class Visualizer:
         self, pos: list[list[Cell]],
         config: Config, path: list[tuple[int, int]],
         history: list[tuple[tuple[int, int], str]],
-        history_bfs: list[tuple[tuple[int, int], tuple[int, int]]],
+        history_bfs: list[tuple[tuple[int, int], tuple[int, int] | None]],
         exist_42: bool
     ) -> None:
         """
@@ -308,19 +308,21 @@ class Visualizer:
             print("6. Quit")
             choice = input("Choice? (1-4): ")
             if choice.isdecimal() and int(choice) == 1:
+                maze: MazeGeneratorBasic
                 if self._config.STRATEGY == "recursive":
-                    maze = MazeGenerator()
+                    maze = MazeGenerator(self._config)
                 elif self._config.STRATEGY == "prims":
-                    maze = MazeGeneratorPrims()
+                    maze = MazeGeneratorPrims(self._config)
                 elif self._config.STRATEGY == "kruskals":
-                    maze = MazeGeneratorKruskals()
+                    maze = MazeGeneratorKruskals(self._config)
                 maze.maze_gen()
                 bfs = BreadthFirstSearch(maze._pos, maze._config)
                 bfs.search_maze()
-                self.__init__(
-                    maze._pos, self._config, bfs._path,
-                    maze._history, bfs._history_bfs, maze._exist_42
-                    )
+                self._pos = maze._pos
+                self._path = bfs._path
+                self._history = maze._history
+                self._history_bfs = bfs._history_bfs
+                self._exist_42 = maze._exist_42
                 self.visualize()
             elif choice.isdecimal() and int(choice) == 2:
                 self._show_path = not self._show_path
@@ -377,7 +379,11 @@ if __name__ == "__main__":
     print()
 
     print('= Visual Test =')
-    maze = MazeGenerator()
+    config = Config(
+        WIDTH=20, HEIGHT=20, ENTRY=(0, 0), EXIT=(19, 19),
+        OUTPUT_FILE="dummy.txt"
+    )
+    maze = MazeGenerator(config)
     print("= 迷路生成前 =")
     maze.maze_show()
     print("= 迷路生成後（バックトラッキング） =")
@@ -387,6 +393,9 @@ if __name__ == "__main__":
     bfs = BreadthFirstSearch(maze._pos, maze._config)
     bfs.search_maze()
     print("= ビジュアライズテスト =")
-    visualizer = Visualizer(bfs._pos, bfs._config, bfs._path)
+    visualizer = Visualizer(
+        bfs._pos, bfs._config, bfs._path, maze._history,
+        bfs._history_bfs, maze._exist_42
+    )
     visualizer.visualize()
     visualizer.show()

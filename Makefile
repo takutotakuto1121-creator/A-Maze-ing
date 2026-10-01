@@ -1,5 +1,6 @@
 VENV = .venv
 BIN = $(VENV)/bin
+PYTHON = $(BIN)/python3
 FLAKE8 = flake8
 MYPY = mypy
 
@@ -12,13 +13,13 @@ install: $(VENV)
 	$(BIN)/pip install -r requirements.txt
 
 run: $(VENV) install
-	$(BIN)/python3 a_maze_ing.py config.txt
+	$(PYTHON) a_maze_ing.py config.txt
 
 analyze: $(VENV) install
-	$(BIN)/python3 maze_analyzer.py maze.txt
+	$(PYTHON) maze_analyzer.py maze.txt
 
 analyze-bonus: $(VENV) install
-	$(BIN)/python3 maze_analyzer.py maze.txt --max-dead-ends 0
+	$(PYTHON) maze_analyzer.py maze.txt --max-dead-ends 0
 
 debug: $(VENV) install
 	python3 -m pdb a_maze_ing.py config.txt
@@ -41,7 +42,7 @@ lint-strict: $(VENV) install
 	$(BIN)/$(MYPY) --strict mazegen a_maze_ing.py
 
 review: $(VENV) install
-	$(BIN)/python3 -m build
+	$(PYTHON) -m build
 	mkdir review
 	cp dist/mazegen-1.0.0-py3-none-any.whl review/
 	cp a_maze_ing.py review/

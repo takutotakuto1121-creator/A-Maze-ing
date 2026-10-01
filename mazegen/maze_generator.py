@@ -407,7 +407,7 @@ class MazeGeneratorBasic(ABC):
 
         if 0 <= x1 < self._config.WIDTH and 0 <= y1 < self._config.HEIGHT:
             if self._config.WIDTH % 2 == 0 and self._config.HEIGHT % 2 == 0:
-                cells = [(x1, y1), (x1, y1 + 1)]
+                cells = [(x1 -1 , y1 - 1), (x1, y1 - 1), (x1 - 1, y1), (x1, y1)]
                 for x, y in cells:
                     if (x + 1, y) in cells and (self._pos[x][y].value & 4):
                         self.break_wall((x, y), "E")
@@ -415,14 +415,14 @@ class MazeGeneratorBasic(ABC):
                         self.break_wall((x, y), "S")
 
             elif self._config.WIDTH % 2 == 0:
-                if (x1 + 1 < self._config.WIDTH and
-                        (self._pos[x1][y1].value & 4)):
-                    self.break_wall((x1, y1), "E")
+                if (x1 > 0 and
+                        (self._pos[x1 - 1][y1].value & 4)):
+                    self.break_wall((x1 - 1, y1), "E")
 
             elif self._config.HEIGHT % 2 == 0:
-                if (y1 + 1 < self._config.HEIGHT and
-                        (self._pos[x1][y1].value & 2)):
-                    self.break_wall((x1, y1), "S")
+                if (y1 > 0 and
+                        (self._pos[x1][y1 - 1].value & 2)):
+                    self.break_wall((x1, y1 - 1), "S")
 
     def output_to_file(self, path_cardinal: str = "") -> None:
         """

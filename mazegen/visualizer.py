@@ -196,6 +196,9 @@ class Visualizer:
             print("42 pattern isn't exist because the maze is too small")
 
     def show_animation(self) -> None:
+        """
+        迷路生成のアニメーションを表示する。
+        """
         if not self._history:
             print("No history of breaking wall")
             input("Press Enter to continue")
@@ -261,6 +264,9 @@ class Visualizer:
             pos[x - 1][y].value -= 4
 
     def show_bfs_animation(self) -> None:
+        """
+        bfsのアニメーションを表示する。
+        """
         if not self._history_bfs:
             return
 

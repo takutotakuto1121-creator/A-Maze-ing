@@ -50,7 +50,7 @@ class BreadthFirstSearch:
                 path = self.reconstruct_path(parent, goal)
                 self._path = path
                 self._path_cardinal = self.make_path_cardinal(path)
-                self.show(self._path_cardinal)
+                # self.show(self._path_cardinal)
                 return
             self._history_bfs.append(((x, y), parent[(x, y)]))
             cardinals = self.get_passible_cardinals(x, y)
